@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
+// IMPORTANT : sans ces deux lignes, Next.js 14 peut garder en cache le
+// résultat de la requête Supabase, et le ping n'atteint alors jamais
+// vraiment la base (donc Supabase considère le projet comme inactif).
+export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
+
 // Appelée automatiquement une fois par jour par le cron Vercel (voir
 // vercel.json). Le seul but est de générer un peu d'activité base de
 // données régulièrement, pour que le projet Supabase (plan gratuit) ne
