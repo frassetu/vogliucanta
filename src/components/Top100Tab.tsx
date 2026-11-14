@@ -51,18 +51,15 @@ export default function Top100Tab({ favorites, onSelectSong, onToggleFavorite }:
         ) : (
           <div className="space-y-2">
             {songs.map(({ song, count }, i) => (
-              <div key={song.id} className="relative">
-                <SongCard
-                  song={song}
-                  rank={i + 1}
-                  isFavorite={favorites.includes(song.id)}
-                  onSelect={() => onSelectSong(song, playlist)}
-                  onToggleFavorite={() => onToggleFavorite(song.id)}
-                />
-                <span className="absolute right-12 top-1/2 -translate-y-1/2 text-xs text-muted">
-                  {count} {count > 1 ? 'visti' : 'vista'}
-                </span>
-              </div>
+              <SongCard
+                key={song.id}
+                song={song}
+                rank={i + 1}
+                rightLabel={`${count} ${count > 1 ? 'visti' : 'vista'}`}
+                isFavorite={favorites.includes(song.id)}
+                onSelect={() => onSelectSong(song, playlist)}
+                onToggleFavorite={() => onToggleFavorite(song.id)}
+              />
             ))}
           </div>
         )}
