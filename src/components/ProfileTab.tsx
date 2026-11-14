@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { ShieldCheck, Info } from 'lucide-react'
+import SuggestionForm from './SuggestionForm'
 
 interface Props {
   isAdmin: boolean
@@ -32,7 +33,7 @@ export default function ProfileTab({ isAdmin, onOpenAdmin }: Props) {
   const showAdminEntry = isAdmin || revealed
 
   return (
-    <div className="px-4 pt-4 pb-4 max-w-lg mx-auto">
+    <div className="px-4 pt-4 pb-28 max-w-lg mx-auto">
       <div className="space-y-3">
         {showAdminEntry && (
           <button
@@ -72,6 +73,8 @@ export default function ProfileTab({ isAdmin, onOpenAdmin }: Props) {
             Versioni {process.env.NEXT_PUBLIC_BUILD_SHA} · {process.env.NEXT_PUBLIC_BUILD_DATE}
           </p>
         </div>
+
+        <SuggestionForm />
       </div>
     </div>
   )
