@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
   const res = NextResponse.json({ ok: true })
   // Cookie httpOnly : illisible par le JavaScript de la page, envoyé
   // automatiquement à chaque requête vers /api/admin.
-  res.cookies.set('accolta_admin', ADMIN_PASSWORD, {
+  res.cookies.set('vogliucanta_admin', ADMIN_PASSWORD, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',

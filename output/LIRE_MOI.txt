@@ -1,4 +1,4 @@
-=== ACCOLTA — Fichiers SQL ===
+=== VOGLIU CANTÀ — Fichiers SQL ===
 
 01_schema.sql
   → À exécuter UNE SEULE FOIS dans Supabase > SQL Editor
@@ -9,5 +9,5 @@ Pour importer tes chansons :
   → Lance l'application une fois déployée sur Vercel
   → Va dans Profil > Espace administrateur
   → Connecte-toi avec ton email/mot de passe admin
-  → Onglet "Importer" > dépose ton fichier Accolta.xlsx
+  → Onglet "Importer" > dépose ton fichier Vogliucanta.xlsx
   → Les doublons sont gérés automatiquement

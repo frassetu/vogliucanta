@@ -1,4 +1,4 @@
-# 🎵 Accolta — Guide de déploiement complet
+# 🎵 Vogliu Cantà — Guide de déploiement complet
 
 > Ce guide te mène de zéro à l'application en ligne, étape par étape, avec chaque clic détaillé.
 
@@ -43,7 +43,7 @@ Temps estimé : **30 à 45 minutes** la première fois..
 - Tu n'as pas besoin de créer une organisation
 
 ### Name
-- Tape : `accolta`
+- Tape : `vogliucanta`
 
 ### Database Password
 - Clique sur **"Generate a password"** (le bouton à droite du champ)
@@ -164,7 +164,7 @@ Git est l'outil qui envoie ton code vers GitHub.
 1. Va sur **https://github.com** et connecte-toi
 2. Clique sur le **"+"** en haut à droite → **"New repository"**
 3. Remplis le formulaire :
-   - **Repository name** : `accolta`
+   - **Repository name** : `vogliucanta`
    - **Description** : `PWA de paroles de chansons corses` (optionnel)
    - **Public** ou **Private** : choisis **Public** (nécessaire pour le plan gratuit Vercel)
    - ⚠️ **Ne coche rien d'autre** (pas de README, pas de .gitignore, pas de license) — le projet a déjà tout ça
@@ -176,7 +176,7 @@ Git est l'outil qui envoie ton code vers GitHub.
 ## Étape 9 — Préparer et envoyer le code
 
 ### Décompresser le projet
-1. Décompresse le fichier `accolta-pwa.zip` que tu as téléchargé
+1. Décompresse le fichier `vogliucanta-pwa.zip` que tu as téléchargé
 2. Tu obtiens un dossier `paroles-pwa` — note où il est sur ton ordinateur (ex: `Bureau/paroles-pwa`)
 
 ### Configurer ton identité Git (une seule fois)
@@ -212,7 +212,7 @@ git add .
 > Prépare tous les fichiers à être envoyés (le point final est important)
 
 ```bash
-git commit -m "Initial commit - Accolta PWA"
+git commit -m "Initial commit - Vogliu Cantà PWA"
 ```
 > Crée un "snapshot" du code
 
@@ -222,7 +222,7 @@ git branch -M main
 > Nomme la branche principale "main"
 
 ```bash
-git remote add origin https://github.com/TON_USERNAME/accolta.git
+git remote add origin https://github.com/TON_USERNAME/vogliucanta.git
 ```
 > ⚠️ Remplace `TON_USERNAME` par ton vrai nom d'utilisateur GitHub
 > (ex: si ton profil est `github.com/jean-dupont`, tape `jean-dupont`)
@@ -239,12 +239,12 @@ La première fois, GitHub te demandera tes identifiants :
   1. Va sur GitHub → clic sur ta photo en haut à droite → **Settings**
   2. Tout en bas du menu gauche → **Developer settings**
   3. **Personal access tokens** → **Tokens (classic)** → **Generate new token (classic)**
-  4. Note : `accolta deploy`, expiration : **No expiration**, coche : **repo**
+  4. Note : `vogliucanta deploy`, expiration : **No expiration**, coche : **repo**
   5. Clique **Generate token** et copie le token (commence par `ghp_...`)
   6. Utilise ce token comme mot de passe dans le terminal
 
 ### Vérifier que ça a marché
-1. Retourne sur la page GitHub de ton dépôt (https://github.com/TON_USERNAME/accolta)
+1. Retourne sur la page GitHub de ton dépôt (https://github.com/TON_USERNAME/vogliucanta)
 2. Tu dois voir tous les fichiers du projet listés
 3. ✅ Si tu les vois, passe à la partie suivante
 
@@ -271,8 +271,8 @@ La première fois, GitHub te demandera tes identifiants :
 
 1. Sur le dashboard Vercel, clique sur **"Add New..."** puis **"Project"**
 2. Tu vois une liste de tes dépôts GitHub
-3. Si tu ne vois pas `accolta`, clique sur **"Adjust GitHub App Permissions"** et autorise l'accès au dépôt
-4. En face de `accolta`, clique sur **"Import"**
+3. Si tu ne vois pas `vogliucanta`, clique sur **"Adjust GitHub App Permissions"** et autorise l'accès au dépôt
+4. En face de `vogliucanta`, clique sur **"Import"**
 5. Tu arrives sur la page de configuration du projet
 
 ---
@@ -311,7 +311,7 @@ Pour chaque variable : tape le **nom** dans le champ "Key", la **valeur** dans l
 
 **Variable 4**
 - Key : `ADMIN_SECRET_TOKEN`
-- Value : invente une longue suite de lettres et chiffres, par exemple : `accolta_admin_secret_2024_xK9mP3`
+- Value : invente une longue suite de lettres et chiffres, par exemple : `vogliucanta_admin_secret_2024_xK9mP3`
   > Ce token sécurise les opérations d'écriture. Note-le quelque part, tu n'auras pas besoin de le retaper souvent.
 
 **Variable 5**
@@ -339,7 +339,7 @@ Après avoir ajouté les 6 variables, clique sur **"Deploy"**.
    - Met l'application en ligne
 3. Quand tu vois **"Congratulations!"** avec des confettis → c'est en ligne ! 🎉
 4. Clique sur **"Continue to Dashboard"**
-5. Tu vois l'URL de ton app, quelque chose comme `accolta-xxxx.vercel.app`
+5. Tu vois l'URL de ton app, quelque chose comme `vogliucanta-xxxx.vercel.app`
 6. Clique dessus pour ouvrir ton application
 
 ---
@@ -369,7 +369,7 @@ Ouvre l'URL de ton app et vérifie :
 2. Appuie sur l'icône **Partager** (carré avec une flèche vers le haut, en bas au centre)
 3. Fais défiler la liste vers le bas
 4. Appuie sur **"Sur l'écran d'accueil"**
-5. Modifie le nom si tu veux (ex: "Accolta") → appuie sur **"Ajouter"**
+5. Modifie le nom si tu veux (ex: "Vogliu Cantà") → appuie sur **"Ajouter"**
 6. L'icône apparaît sur ton écran d'accueil comme une vraie app
 
 ### Sur Android (Chrome)

@@ -101,7 +101,7 @@ export default function SongDetail({ song, isFavorite, onToggleFavorite, onBack,
   }
 
   const handleSendModal = () => {
-    const key = 'accolta_reports'
+    const key = 'vogliucanta_reports'
     const existing = JSON.parse(localStorage.getItem(key) || '[]')
     existing.push({
       type: modal,

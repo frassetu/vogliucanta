@@ -62,7 +62,7 @@ export default function ProfileTab({ isAdmin, onOpenAdmin }: Props) {
             <p className="font-display font-semibold text-text">À prupositu</p>
           </div>
           <p className="text-text-muted text-sm leading-relaxed">
-            Accolta hè una appiicazioni di paroddi di i canzoni corsi.
+            Vogliu Cantà hè una appiicazioni di paroddi di i canzoni corsi.
             Ogni visitori pò fighjulà è metta in favuritu i so canzoni favuriti.
           </p>
           <p

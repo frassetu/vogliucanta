@@ -3,7 +3,7 @@
 
 export function useAdminApi() {
   const getToken = () =>
-    typeof window !== 'undefined' ? sessionStorage.getItem('accolta_admin_token') || '' : ''
+    typeof window !== 'undefined' ? sessionStorage.getItem('vogliucanta_admin_token') || '' : ''
 
   const headers = () => ({
     'Content-Type': 'application/json',

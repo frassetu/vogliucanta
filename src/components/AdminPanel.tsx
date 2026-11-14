@@ -221,7 +221,7 @@ export default function AdminPanel({ isAdmin, onLogin, onLogout, onClose }: Prop
       const ws = XLSX.utils.json_to_sheet(rows, { header: fields.map(f => headerLabels[f]) })
       const wb = XLSX.utils.book_new()
       XLSX.utils.book_append_sheet(wb, ws, 'Canzoni')
-      XLSX.writeFile(wb, `accolta_export_${new Date().toISOString().slice(0, 10)}.xlsx`)
+      XLSX.writeFile(wb, `vogliucanta_export_${new Date().toISOString().slice(0, 10)}.xlsx`)
     }
     setExporting(false)
   }

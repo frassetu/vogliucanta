@@ -4,6 +4,6 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || process.env.NEXT_PUBLIC_ADM
 
 export function checkAuth(req: NextRequest) {
   if (!ADMIN_PASSWORD) return false
-  const cookie = req.cookies.get('accolta_admin')?.value
+  const cookie = req.cookies.get('vogliucanta_admin')?.value
   return cookie === ADMIN_PASSWORD
 }

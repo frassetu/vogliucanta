@@ -51,9 +51,9 @@ export default function App() {
   })
 
   useEffect(() => {
-    const saved = localStorage.getItem('accolta_favorites')
+    const saved = localStorage.getItem('vogliucanta_favorites')
     if (saved) setFavorites(JSON.parse(saved))
-    const admin = sessionStorage.getItem('accolta_admin')
+    const admin = sessionStorage.getItem('vogliucanta_admin')
     if (admin === 'true') setIsAdmin(true)
   }, [])
 
@@ -69,7 +69,7 @@ export default function App() {
   const toggleFavorite = (id: number) => {
     setFavorites(prev => {
       const next = prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]
-      localStorage.setItem('accolta_favorites', JSON.stringify(next))
+      localStorage.setItem('vogliucanta_favorites', JSON.stringify(next))
       return next
     })
   }
@@ -193,11 +193,11 @@ export default function App() {
           isAdmin={isAdmin}
           onLogin={() => {
             setIsAdmin(true)
-            sessionStorage.setItem('accolta_admin', 'true')
+            sessionStorage.setItem('vogliucanta_admin', 'true')
           }}
           onLogout={() => {
             setIsAdmin(false)
-            sessionStorage.removeItem('accolta_admin')
+            sessionStorage.removeItem('vogliucanta_admin')
           }}
         />
       </div>
