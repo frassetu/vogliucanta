@@ -13,8 +13,25 @@ export async function GET(req: NextRequest) {
   if (action === 'stats') {
     const { count: total } = await supabase.from('chansons').select('*', { count: 'exact', head: true })
     const { count: withLyrics } = await supabase.from('chansons').select('*', { count: 'exact', head: true }).not('paroles', 'is', null).neq('paroles', '')
-    const { data: artistData } = await supabase.from('chansons').select('artiste').not('paroles', 'is', null).neq('paroles', '')
-    const artists = new Set(artistData?.map((r: any) => r.artiste)).size
+    // Supabase renvoie au maximum 1000 lignes par requête : on lit donc par
+    // tranches de 1000, sinon le nombre d'artistes est sous-estimé dès qu'il
+    // y a plus de 1000 chansons avec paroles.
+    let artistRows: any[] = []
+    let from = 0
+    while (true) {
+      const { data } = await supabase
+        .from('chansons')
+        .select('artiste')
+        .not('paroles', 'is', null)
+        .neq('paroles', '')
+        .order('id', { ascending: true })
+        .range(from, from + 999)
+      if (!data || data.length === 0) break
+      artistRows = artistRows.concat(data)
+      if (data.length < 1000) break
+      from += 1000
+    }
+    const artists = new Set(artistRows.map((r: any) => r.artiste)).size
     return NextResponse.json({ total, withLyrics, artists })
   }
 
