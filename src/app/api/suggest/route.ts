@@ -39,7 +39,7 @@ function clean(v: unknown, max: number): string {
 const oneLine = (s: string) => s.replace(/\s+/g, ' ').trim()
 const digits = (v: unknown, max: number) => clean(v, max).replace(/\D/g, '')
 
-const GENERIC_ERROR = 'Arrori : u missaghju ùn hè micca partutu. Ritentate più tardi.'
+const GENERIC_ERROR = 'Arrori : u missaghju ùn hè micca partutu. Ripruveti più tardi.'
 
 type Fields = { artiste: string; album: string; titre: string; annee: string; numero: string; paroles: string }
 
@@ -74,12 +74,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "L'artistu è u titulu sò ubligatorii." }, { status: 400 })
     }
   } else if (!f.artiste || !f.titre || !f.paroles) {
-    return NextResponse.json({ error: "Cumplettate l'artistu, u titulu è i paroddi." }, { status: 400 })
+    return NextResponse.json({ error: "Impiiti l'artistu, u titulu è i paroddi." }, { status: 400 })
   }
 
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'inconnue'
   if (tooMany(ip)) {
-    return NextResponse.json({ error: 'Troppu prupposte in pocu tempu. Ritentate più tardi.' }, { status: 429 })
+    return NextResponse.json({ error: 'Assi paroddi sò stati mandati in pocu tempu. Ripruveti più tardi.' }, { status: 429 })
   }
 
   const url = process.env.SHEET_PUSH_URL
@@ -92,9 +92,9 @@ export async function POST(req: NextRequest) {
   let message: string
 
   if (!isCorrection) {
-    subject = `Vogliu Cantà – nouvelle proposition : ${f.artiste} – ${f.titre}`
+    subject = `Vogliu Cantà – nova pruposta : ${f.artiste} – ${f.titre}`
     message = [
-      "Nouvelle proposition de paroles reçue depuis l'application Vogliu Cantà.",
+      "Nova pruposta di paroddi ricivutu via l’apiicazioni Vogliu Cantà.",
       '',
       `Artiste : ${f.artiste}`,
       `Album : ${f.album || '(non précisé)'}`,
@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
     // envoie comme « version actuelle » : le mail compare ainsi avec la vraie.
     const id = Number(body.id)
     if (!Number.isInteger(id) || id <= 0) {
-      return NextResponse.json({ error: 'Canzona micca trovata.' }, { status: 400 })
+      return NextResponse.json({ error: 'Canzona micca truvata.' }, { status: 400 })
     }
     const { data: song } = await supabase
       .from('chansons')
@@ -118,7 +118,7 @@ export async function POST(req: NextRequest) {
       .eq('id', id)
       .single()
     if (!song) {
-      return NextResponse.json({ error: 'Canzona micca trovata.' }, { status: 400 })
+      return NextResponse.json({ error: 'Canzona micca truvata.' }, { status: 400 })
     }
 
     const before: Fields = {
@@ -135,24 +135,24 @@ export async function POST(req: NextRequest) {
     }
     const changed = (Object.keys(labels) as (keyof Fields)[]).filter(k => f[k] !== before[k])
     if (changed.length === 0) {
-      return NextResponse.json({ error: 'Nisun scambiamentu da mandà.' }, { status: 400 })
+      return NextResponse.json({ error: 'Nisunu scambiamentu da mandà.' }, { status: 400 })
     }
 
     const lines = changed
       .filter(k => k !== 'paroles')
       .map(k => `- ${labels[k]} : « ${before[k] || '(vide)'} » → « ${f[k] || '(vide)'} »`)
-    if (changed.includes('paroles')) lines.push('- Paroles : modifiées (voir plus bas)')
+    if (changed.includes('paroles')) lines.push('- Paroddi : scambiati (voir plus bas)')
 
-    subject = `Vogliu Cantà – correction proposée : ${before.artiste} – ${before.titre} (n°${id})`
+    subject = `Vogliu Cantà – nova currizioni : ${before.artiste} – ${before.titre} (n°${id})`
     message = [
-      "Correction proposée depuis l'application Vogliu Cantà.",
+      "Nova currizioni via l’apiicazioni Vogliu Cantà.",
       '',
       `Chanson : ${before.artiste} – ${before.titre} (id ${id})`,
       '',
       'Modifications proposées :',
       ...lines,
       ...(changed.includes('paroles')
-        ? ['', '----- Paroles proposées -----', f.paroles || '(vide)', '', '----- Paroles actuelles -----', before.paroles || '(vide)']
+        ? ['', '----- Paroddi novi -----', f.paroles || '(vide)', '', '----- Paroddi attuali -----', before.paroles || '(vide)']
         : []),
     ].join('\n')
   }
