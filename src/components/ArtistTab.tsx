@@ -59,6 +59,30 @@ export default function ArtistTab({ favorites, onSelectSong, onToggleFavorite, a
     load()
   }, [])
 
+  // Position de défilement de la liste des artistes, mémorisée quand on
+  // ouvre un artiste puis restaurée au retour (sinon la liste se recréait
+  // en haut, à la lettre A).
+  const savedScroll = useRef(0)
+  const prevView = useRef(view)
+
+  useEffect(() => {
+    if (loading) return
+    // 'instant' : le CSS global met scroll-behavior: smooth, on veut un saut direct.
+    if (view === 'list') {
+      if (savedScroll.current > 0) {
+        window.scrollTo({ top: savedScroll.current, behavior: 'instant' as ScrollBehavior })
+      }
+    } else if (prevView.current === 'list') {
+      window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior })
+    }
+    prevView.current = view
+  }, [view, loading])
+
+  const openArtist = (name: string) => {
+    savedScroll.current = window.scrollY
+    onArtistStateChange({ view: 'albums', selectedArtist: name, selectedAlbum: null })
+  }
+
   const scrollToLetter = (letter: string) => {
     const el = letterRefs.current[letter]
     if (el && listRef.current) {
@@ -109,7 +133,7 @@ export default function ArtistTab({ favorites, onSelectSong, onToggleFavorite, a
                 <p className="text-muted text-xs">{artistAlbums.length} {artistAlbums.length > 1 ? 'dischetti' : 'dischettu'}</p>
               </div>
             </div>
-          ) : view === 'songs' && selectedArtist && selectedAlbum ? (
+          ) : view === 'songs' && selectedArtist ? (
             <div className="flex items-center gap-3">
               <button onClick={() => onArtistStateChange({ view: 'albums', selectedArtist, selectedAlbum: null })}
                 className="w-8 h-8 rounded-xl bg-card flex items-center justify-center flex-shrink-0">
@@ -147,7 +171,7 @@ export default function ArtistTab({ favorites, onSelectSong, onToggleFavorite, a
                     const color = getColor(artist.name)
                     return (
                       <button key={artist.name}
-                        onClick={() => onArtistStateChange({ view: 'albums', selectedArtist: artist.name, selectedAlbum: null })}
+                        onClick={() => openArtist(artist.name)}
                         className="w-full flex items-center gap-3 p-3 rounded-xl bg-card hover:bg-border transition-colors text-left">
                         <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xs font-bold flex-shrink-0"
                           style={{ background: `${color}22`, border: `1.5px solid ${color}44`, color }}>
