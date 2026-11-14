@@ -98,11 +98,11 @@ export default function SuggestionForm() {
         setForm(emptyForm)
       } else {
         const d = await res.json().catch(() => ({}))
-        setErrorMsg(d.error || "Arrori : u missaghju ùn hè micca partutu. Ritentate più tardi.")
+        setErrorMsg(d.error || "Arrori : u missaghju ùn hè micca partutu. Ripruveti più tardi.")
         setStatus('error')
       }
     } catch {
-      setErrorMsg('Arrori di cunnissioni. Ritentate più tardi.')
+      setErrorMsg('Arrori di cunnissioni. Ripruveti più tardi.')
       setStatus('error')
     }
   }
@@ -123,7 +123,7 @@ export default function SuggestionForm() {
       {open && (
         <div className="px-4 pb-4 space-y-3">
           <p className="text-text-muted text-sm leading-relaxed">
-            Ci mancanu i paroddi d'una canzona ? Mandateli quì, è i viderete in l'appiicazioni dopu à a verificazioni.
+            Ci mancanu i paroddi d'una canzona ? Mandetili quì, è i vidareti in l'appiicazioni dopu à a verificazioni.
           </p>
 
           {/* Artistu avec propositions au fil de la frappe */}
@@ -256,7 +256,7 @@ export default function SuggestionForm() {
           {status === 'sent' && (
             <div className="p-3 rounded-xl bg-green-500/10 border border-green-500/30 flex items-center gap-2">
               <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
-              <p className="text-green-400 text-sm">Grazie ! I paroddi sò stati mandati.</p>
+              <p className="text-green-400 text-sm">Grazia ! I paroddi sò stati mandati.</p>
             </div>
           )}
 
