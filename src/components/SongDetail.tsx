@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, Fragment, type ReactNode } from 'react'
-import { ChevronLeft, Heart, Music, Flag, Send, Pencil, Trash2, Loader } from 'lucide-react'
+import { ChevronLeft, Heart, Music, Flag, Share2, Pencil, Trash2, Loader } from 'lucide-react'
 import TopBar from './TopBar'
 import { Song, trackView } from '@/lib/supabase'
 import { findHighlightRanges } from '@/lib/format'
@@ -22,7 +22,29 @@ interface Props {
   onGoToAlbum?: (artiste: string, album: string | null) => void
 }
 
-type ModalType = 'report' | 'propose' | 'edit' | null
+type ModalType = 'report' | 'edit' | null
+
+// Champs du formulaire de modification (admin) et de correction (visiteurs).
+const FIELDS = [
+  { key: 'artiste', label: 'Artistu *', placeholder: 'Artistu' },
+  { key: 'titre', label: 'Titulu *', placeholder: 'Titulu' },
+  { key: 'album', label: 'Dischettu', placeholder: 'Dischettu' },
+  { key: 'annee', label: 'Annata', placeholder: '2024' },
+  { key: 'numero', label: 'Numeru di canzona', placeholder: '1' },
+]
+
+type SongForm = { artiste: string; album: string; titre: string; annee: string; numero: string; paroles: string }
+
+function songToForm(song: Song): SongForm {
+  return {
+    artiste: song.artiste,
+    album: song.album || '',
+    titre: song.titre,
+    annee: song.annee?.toString() || '',
+    numero: song.numero?.toString() || '',
+    paroles: song.paroles || '',
+  }
+}
 
 // Découpe les paroles en conservant de vrais <br/> (copier/coller fiable),
 // et surligne les passages correspondant à highlightQuery si présent (n'est
@@ -60,8 +82,11 @@ function renderParoles(text: string, highlightQuery?: string) {
 export default function SongDetail({ song, isFavorite, onToggleFavorite, onBack, isAdmin, hasPrev, hasNext, onPrev, onNext, highlightQuery, onGoToArtist, onGoToAlbum }: Props) {
   const [fontSize, setFontSize] = useState(16)
   const [modal, setModal] = useState<ModalType>(null)
-  const [modalText, setModalText] = useState('')
-  const [modalSent, setModalSent] = useState(false)
+  const [reportForm, setReportForm] = useState<SongForm>(() => songToForm(song))
+  const [reportStatus, setReportStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle')
+  const [reportError, setReportError] = useState('')
+  const [honey, setHoney] = useState('') // piège à robots (champ invisible)
+  const [shareFeedback, setShareFeedback] = useState(false)
   const [currentSong, setCurrentSong] = useState(song)
 
   const [editForm, setEditForm] = useState({
@@ -100,20 +125,59 @@ export default function SongDetail({ song, isFavorite, onToggleFavorite, onBack,
     localStorage.setItem('lyrics_font_size', size.toString())
   }
 
-  const handleSendModal = () => {
-    const key = 'vogliucanta_reports'
-    const existing = JSON.parse(localStorage.getItem(key) || '[]')
-    existing.push({
-      type: modal,
-      songId: song.id,
-      songTitle: song.titre,
-      artist: song.artiste,
-      text: modalText,
-      date: new Date().toISOString(),
-    })
-    localStorage.setItem(key, JSON.stringify(existing))
-    setModalSent(true)
-    setTimeout(() => { setModal(null); setModalText(''); setModalSent(false) }, 2000)
+  // Spartà : partage natif du téléphone (WhatsApp, SMS…) avec un lien qui ouvre
+  // directement cette chanson ; sur ordinateur, le lien est copié.
+  const handleShare = async () => {
+    const url = `${window.location.origin}/?c=${song.id}`
+    const title = `${song.titre} – ${song.artiste}`
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, text: `${title} · Vogliu Cantà`, url })
+        return
+      }
+    } catch (e) {
+      if ((e as Error).name === 'AbortError') return // l'utilisateur a fermé la fenêtre de partage
+    }
+    try {
+      await navigator.clipboard.writeText(url)
+      setShareFeedback(true)
+      setTimeout(() => setShareFeedback(false), 2000)
+    } catch {}
+  }
+
+  // Signalà : ouvre le formulaire prérempli avec la chanson telle qu'elle est.
+  const openReport = () => {
+    setReportForm(songToForm(song))
+    setReportStatus('idle')
+    setReportError('')
+    setModal('report')
+  }
+
+  const original = songToForm(song)
+  const norm = (v: string) => v.replace(/\r\n/g, '\n').trim()
+  const reportChanged = (Object.keys(original) as (keyof SongForm)[]).some(k => norm(reportForm[k]) !== norm(original[k]))
+
+  const handleSendReport = async () => {
+    setReportStatus('sending')
+    setReportError('')
+    try {
+      const res = await fetch('/api/suggest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'correction', id: song.id, ...reportForm, website: honey }),
+      })
+      if (res.ok) {
+        setReportStatus('sent')
+        setTimeout(() => { setModal(null); setReportStatus('idle') }, 2000)
+      } else {
+        const d = await res.json().catch(() => ({}))
+        setReportError(d.error || 'Arrori : u missaghju ùn hè micca partutu. Ritentate più tardi.')
+        setReportStatus('error')
+      }
+    } catch {
+      setReportError('Arrori di cunnissioni. Ritentate più tardi.')
+      setReportStatus('error')
+    }
   }
 
   const handleSaveEdit = async () => {
@@ -238,12 +302,12 @@ export default function SongDetail({ song, isFavorite, onToggleFavorite, onBack,
             </>
           ) : (
             <>
-              <button onClick={() => { setModal('propose'); setModalText('') }}
+              <button onClick={handleShare}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-card text-text-muted text-xs font-medium">
-                <Send className="w-3.5 h-3.5" />
-                Prupona
+                <Share2 className="w-3.5 h-3.5" />
+                {shareFeedback ? 'Ligame cupiatu !' : 'Sparta'}
               </button>
-              <button onClick={() => { setModal('report'); setModalText('') }}
+              <button onClick={openReport}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-card text-text-muted text-xs font-medium">
                 <Flag className="w-3.5 h-3.5" />
                 Signalà
@@ -276,13 +340,7 @@ export default function SongDetail({ song, isFavorite, onToggleFavorite, onBack,
                   <button onClick={() => setModal(null)} className="text-muted text-sm">Annullà</button>
                 </div>
                 <div className="space-y-3">
-                  {[
-                    { key: 'artiste', label: 'Artistu *', placeholder: 'Artistu' },
-                    { key: 'titre', label: 'Titulu *', placeholder: 'Titulu' },
-                    { key: 'album', label: 'Dischettu', placeholder: 'Dischettu' },
-                    { key: 'annee', label: 'Annata', placeholder: '2024' },
-                    { key: 'numero', label: 'Numeru di canzona', placeholder: '1' },
-                  ].map(({ key, label, placeholder }) => (
+                  {FIELDS.map(({ key, label, placeholder }) => (
                     <div key={key}>
                       <label className="text-text-muted text-xs mb-1 block">{label}</label>
                       <input
@@ -314,9 +372,9 @@ export default function SongDetail({ song, isFavorite, onToggleFavorite, onBack,
               </>
             )}
 
-            {(modal === 'report' || modal === 'propose') && (
+            {modal === 'report' && (
               <>
-                {modalSent ? (
+                {reportStatus === 'sent' ? (
                   <div className="text-center py-4">
                     <p className="text-2xl mb-2">✅</p>
                     <p className="font-display font-semibold text-text">Mandatu, grazia !</p>
@@ -324,20 +382,53 @@ export default function SongDetail({ song, isFavorite, onToggleFavorite, onBack,
                 ) : (
                   <>
                     <div className="flex items-center justify-between">
-                      <h3 className="font-display font-bold text-text">
-                        {modal === 'report' ? 'Signalà un sbagliu' : 'Prupona paroddi'}
-                      </h3>
+                      <h3 className="font-display font-bold text-text">Signalà un sbagliu</h3>
                       <button onClick={() => setModal(null)} className="text-muted text-sm">Annullà</button>
                     </div>
-                    <textarea
-                      value={modalText}
-                      onChange={e => setModalText(e.target.value)}
-                      placeholder={modal === 'report' ? 'Discriviti u sbagliu…' : 'Mittiti i paroddi quì…'}
-                      rows={6}
-                      className="w-full px-4 py-3 rounded-xl bg-card border border-border text-text text-sm outline-none placeholder:text-muted resize-none focus:border-accent"
+                    <p className="text-text-muted text-sm leading-relaxed">
+                      Currigite ciò chì ùn va micca, poi mandate. I campi sò digià pieni cù a canzona attuale.
+                    </p>
+                    <div className="space-y-3">
+                      {FIELDS.map(({ key, label, placeholder }) => (
+                        <div key={key}>
+                          <label className="text-text-muted text-xs mb-1 block">{label}</label>
+                          <input
+                            value={(reportForm as any)[key]}
+                            onChange={e => { setReportForm(f => ({ ...f, [key]: e.target.value })); if (reportStatus === 'error') setReportStatus('idle') }}
+                            placeholder={placeholder}
+                            className="w-full px-4 py-2.5 rounded-xl bg-card border border-border text-text text-sm outline-none placeholder:text-muted focus:border-accent"
+                          />
+                        </div>
+                      ))}
+                      <div>
+                        <label className="text-text-muted text-xs mb-1 block">Paroddi</label>
+                        <textarea
+                          value={reportForm.paroles}
+                          onChange={e => { setReportForm(f => ({ ...f, paroles: e.target.value })); if (reportStatus === 'error') setReportStatus('idle') }}
+                          rows={10}
+                          className="w-full px-4 py-2.5 rounded-xl bg-card border border-border text-text text-sm outline-none placeholder:text-muted focus:border-accent resize-none"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Piège à robots : champ invisible pour un humain */}
+                    <input
+                      type="text"
+                      name="website"
+                      value={honey}
+                      onChange={e => setHoney(e.target.value)}
+                      tabIndex={-1}
+                      autoComplete="off"
+                      aria-hidden="true"
+                      className="absolute -left-[9999px] w-px h-px opacity-0"
                     />
-                    <button disabled={!modalText.trim()} onClick={handleSendModal}
-                      className="w-full py-3 rounded-xl accent-gradient text-white font-display font-semibold text-sm disabled:opacity-40">
+
+                    {reportStatus === 'error' && <p className="text-red-400 text-sm">{reportError}</p>}
+                    <button
+                      disabled={!reportForm.artiste.trim() || !reportForm.titre.trim() || !reportChanged || reportStatus === 'sending'}
+                      onClick={handleSendReport}
+                      className="w-full py-3 rounded-xl accent-gradient text-white font-display font-semibold text-sm disabled:opacity-40 flex items-center justify-center gap-2">
+                      {reportStatus === 'sending' && <Loader className="w-4 h-4 animate-spin" />}
                       Mandà
                     </button>
                   </>
