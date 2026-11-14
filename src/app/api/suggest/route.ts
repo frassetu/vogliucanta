@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { supabase } from '@/lib/supabase'
 
 export const dynamic = 'force-dynamic'
 
-// Reçoit une proposition de paroles depuis l'appli et la fait envoyer par mail
-// via le script Google (le même que pour la synchro du Sheet : il envoie le
-// mail depuis le compte propriétaire, vers sa propre boîte).
+// Reçoit une proposition de paroles (formulaire du Profil) ou une correction de
+// chanson (bouton « Signalà ») et la fait envoyer par mail via le script Google
+// (le même que pour la synchro du Sheet : il envoie le mail depuis le compte
+// propriétaire, vers sa propre boîte).
 
 // Limite simple : 5 envois par heure et par adresse IP (mémoire du serveur,
 // donc approximative — c'est un garde-fou, pas une protection absolue).
@@ -35,6 +37,22 @@ function clean(v: unknown, max: number): string {
     .slice(0, max)
 }
 const oneLine = (s: string) => s.replace(/\s+/g, ' ').trim()
+const digits = (v: unknown, max: number) => clean(v, max).replace(/\D/g, '')
+
+const GENERIC_ERROR = 'Arrori : u missaghju ùn hè micca partutu. Ritentate più tardi.'
+
+type Fields = { artiste: string; album: string; titre: string; annee: string; numero: string; paroles: string }
+
+function readFields(body: any): Fields {
+  return {
+    artiste: oneLine(clean(body.artiste, 120)),
+    album: oneLine(clean(body.album, 120)),
+    titre: oneLine(clean(body.titre, 150)),
+    annee: digits(body.annee, 4),
+    numero: digits(body.numero, 3),
+    paroles: clean(body.paroles, 20000),
+  }
+}
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null)
@@ -48,14 +66,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true })
   }
 
-  const artiste = oneLine(clean(body.artiste, 120))
-  const album = oneLine(clean(body.album, 120))
-  const titre = oneLine(clean(body.titre, 150))
-  const paroles = clean(body.paroles, 20000)
-  const annee = clean(body.annee, 4).replace(/\D/g, '')
-  const numero = clean(body.numero, 3).replace(/\D/g, '')
+  const isCorrection = body.type === 'correction'
+  const f = readFields(body)
 
-  if (!artiste || !titre || !paroles) {
+  if (isCorrection) {
+    if (!f.artiste || !f.titre) {
+      return NextResponse.json({ error: "L'artistu è u titulu sò ubligatorii." }, { status: 400 })
+    }
+  } else if (!f.artiste || !f.titre || !f.paroles) {
     return NextResponse.json({ error: "Cumplettate l'artistu, u titulu è i paroddi." }, { status: 400 })
   }
 
@@ -70,19 +88,74 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "U serviziu d'invià ùn hè micca cunfiguratu." }, { status: 500 })
   }
 
-  const subject = `Vogliu Cantà – nouvelle proposition : ${artiste} – ${titre}`
-  const message = [
-    "Nouvelle proposition de paroles reçue depuis l'application Vogliu Cantà.",
-    '',
-    `Artiste : ${artiste}`,
-    `Album : ${album || '(non précisé)'}`,
-    `Année : ${annee || '(non précisée)'}`,
-    `N° : ${numero || '(non précisé)'}`,
-    `Titre : ${titre}`,
-    '',
-    '----- Paroles -----',
-    paroles,
-  ].join('\n')
+  let subject: string
+  let message: string
+
+  if (!isCorrection) {
+    subject = `Vogliu Cantà – nouvelle proposition : ${f.artiste} – ${f.titre}`
+    message = [
+      "Nouvelle proposition de paroles reçue depuis l'application Vogliu Cantà.",
+      '',
+      `Artiste : ${f.artiste}`,
+      `Album : ${f.album || '(non précisé)'}`,
+      `Année : ${f.annee || '(non précisée)'}`,
+      `N° : ${f.numero || '(non précisé)'}`,
+      `Titre : ${f.titre}`,
+      '',
+      '----- Paroles -----',
+      f.paroles,
+    ].join('\n')
+  } else {
+    // On relit la chanson dans la base plutôt que de croire ce que le navigateur
+    // envoie comme « version actuelle » : le mail compare ainsi avec la vraie.
+    const id = Number(body.id)
+    if (!Number.isInteger(id) || id <= 0) {
+      return NextResponse.json({ error: 'Canzona micca trovata.' }, { status: 400 })
+    }
+    const { data: song } = await supabase
+      .from('chansons')
+      .select('id, artiste, album, titre, annee, numero, paroles')
+      .eq('id', id)
+      .single()
+    if (!song) {
+      return NextResponse.json({ error: 'Canzona micca trovata.' }, { status: 400 })
+    }
+
+    const before: Fields = {
+      artiste: oneLine(song.artiste ?? ''),
+      album: oneLine(song.album ?? ''),
+      titre: oneLine(song.titre ?? ''),
+      annee: song.annee != null ? String(song.annee) : '',
+      numero: song.numero != null ? String(song.numero) : '',
+      paroles: (song.paroles ?? '').replace(/\r\n/g, '\n').trim(),
+    }
+
+    const labels: Record<keyof Fields, string> = {
+      artiste: 'Artiste', album: 'Album', titre: 'Titre', annee: 'Année', numero: 'N°', paroles: 'Paroles',
+    }
+    const changed = (Object.keys(labels) as (keyof Fields)[]).filter(k => f[k] !== before[k])
+    if (changed.length === 0) {
+      return NextResponse.json({ error: 'Nisun scambiamentu da mandà.' }, { status: 400 })
+    }
+
+    const lines = changed
+      .filter(k => k !== 'paroles')
+      .map(k => `- ${labels[k]} : « ${before[k] || '(vide)'} » → « ${f[k] || '(vide)'} »`)
+    if (changed.includes('paroles')) lines.push('- Paroles : modifiées (voir plus bas)')
+
+    subject = `Vogliu Cantà – correction proposée : ${before.artiste} – ${before.titre} (n°${id})`
+    message = [
+      "Correction proposée depuis l'application Vogliu Cantà.",
+      '',
+      `Chanson : ${before.artiste} – ${before.titre} (id ${id})`,
+      '',
+      'Modifications proposées :',
+      ...lines,
+      ...(changed.includes('paroles')
+        ? ['', '----- Paroles proposées -----', f.paroles || '(vide)', '', '----- Paroles actuelles -----', before.paroles || '(vide)']
+        : []),
+    ].join('\n')
+  }
 
   try {
     const r = await fetch(url, {
@@ -97,11 +170,11 @@ export async function POST(req: NextRequest) {
     // mis à jour, secret erroné…), on ne prétend pas que le mail est parti.
     if (!r.ok || !text.includes('"mailed":true')) {
       console.error('suggest: réponse inattendue du script', r.status, text.slice(0, 200))
-      return NextResponse.json({ error: 'Arrori : u missaghju ùn hè micca partutu. Ritentate più tardi.' }, { status: 502 })
+      return NextResponse.json({ error: GENERIC_ERROR }, { status: 502 })
     }
     return NextResponse.json({ ok: true })
   } catch (e) {
     console.error('suggest error:', e)
-    return NextResponse.json({ error: 'Arrori : u missaghju ùn hè micca partutu. Ritentate più tardi.' }, { status: 502 })
+    return NextResponse.json({ error: GENERIC_ERROR }, { status: 502 })
   }
 }
