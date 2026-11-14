@@ -12,9 +12,10 @@ interface Props {
   rank?: number
   trackNumber?: number | null
   subtitle?: string
+  rightLabel?: string
 }
 
-export default function SongCard({ song, isFavorite, onSelect, onToggleFavorite, rank, trackNumber, subtitle }: Props) {
+export default function SongCard({ song, isFavorite, onSelect, onToggleFavorite, rank, trackNumber, subtitle, rightLabel }: Props) {
   const color = getColor(song.artiste)
 
   return (
@@ -50,6 +51,9 @@ export default function SongCard({ song, isFavorite, onSelect, onToggleFavorite,
           {subtitle || `${song.artiste}${song.album ? ` · ${song.album}` : ''}`}
         </p>
       </div>
+      {rightLabel && (
+        <span className="text-xs text-muted flex-shrink-0 whitespace-nowrap">{rightLabel}</span>
+      )}
       <button
         onClick={e => { e.stopPropagation(); onToggleFavorite() }}
         className="p-1 flex-shrink-0"
