@@ -10,6 +10,7 @@ import SongDetail from '@/components/SongDetail'
 import BottomNav from '@/components/BottomNav'
 import AdminPanel from '@/components/AdminPanel'
 import Top100Tab from '@/components/Top100Tab'
+import { getAllSongs } from '@/lib/songs'
 import TopBar from '@/components/TopBar'
 import Splash from '@/components/Splash'
 import { Song } from '@/lib/supabase'
@@ -55,6 +56,20 @@ export default function App() {
     if (saved) setFavorites(JSON.parse(saved))
     const admin = sessionStorage.getItem('vogliucanta_admin')
     if (admin === 'true') setIsAdmin(true)
+  }, [])
+
+  // Lien partagé via « Spartà » : /?c=123 ouvre directement la chanson 123.
+  useEffect(() => {
+    const id = Number(new URLSearchParams(window.location.search).get('c'))
+    if (!Number.isInteger(id) || id <= 0) return
+    window.history.replaceState(null, '', window.location.pathname)
+    getAllSongs().then(all => {
+      const song = all.find(s => s.id === id)
+      if (song) {
+        setSelectedSong(song)
+        setSongHistory([song])
+      }
+    })
   }, [])
 
   useEffect(() => {
