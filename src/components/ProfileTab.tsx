@@ -2,11 +2,16 @@
 
 import { useRef, useState } from 'react'
 import { ShieldCheck, Info } from 'lucide-react'
+import type { User } from '@supabase/supabase-js'
 import SuggestionForm from './SuggestionForm'
+import AuthCard from './AuthCard'
 
 interface Props {
   isAdmin: boolean
   onOpenAdmin: () => void
+  user: User | null
+  authLoading: boolean
+  onSignOut: () => void
 }
 
 // Nombre de taps sur "Version" nécessaires pour révéler l'accès admin,
@@ -14,7 +19,7 @@ interface Props {
 const TAPS_REQUIRED = 5
 const TAP_RESET_MS = 3000
 
-export default function ProfileTab({ isAdmin, onOpenAdmin }: Props) {
+export default function ProfileTab({ isAdmin, onOpenAdmin, user, authLoading, onSignOut }: Props) {
   const [revealed, setRevealed] = useState(false)
   const tapCount = useRef(0)
   const tapTimer = useRef<NodeJS.Timeout>()
@@ -35,6 +40,8 @@ export default function ProfileTab({ isAdmin, onOpenAdmin }: Props) {
   return (
     <div className="px-4 pt-4 pb-28 max-w-lg mx-auto">
       <div className="space-y-3">
+        <AuthCard user={user} loading={authLoading} onSignOut={onSignOut} />
+
         {showAdminEntry && (
           <button
             onClick={onOpenAdmin}
