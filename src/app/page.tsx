@@ -13,7 +13,10 @@ import Top100Tab from '@/components/Top100Tab'
 import { getAllSongs } from '@/lib/songs'
 import TopBar from '@/components/TopBar'
 import Splash from '@/components/Splash'
-import { Song } from '@/lib/supabase'
+import { Song, supabase } from '@/lib/supabase'
+import { useAuth } from '@/hooks/useAuth'
+import LoginHint from '@/components/LoginHint'
+import ResetPasswordModal from '@/components/ResetPasswordModal'
 
 export type Tab = 'home' | 'search' | 'artists' | 'top100' | 'favorites' | 'profile'
 
@@ -36,6 +39,8 @@ export default function App() {
   const [songHistory, setSongHistory] = useState<Song[]>([])
   const [highlightQuery, setHighlightQuery] = useState('')
   const [favorites, setFavorites] = useState<number[]>([])
+  const { user, loading: authLoading, recovery, clearRecovery } = useAuth()
+  const [showLoginHint, setShowLoginHint] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
   const [showAdmin, setShowAdmin] = useState(false)
   const [showSplash, setShowSplash] = useState(true)
@@ -81,12 +86,64 @@ export default function App() {
     return () => { document.body.style.overflow = '' }
   }, [selectedSong])
 
+  // Favoris : toujours gardés sur l'appareil ; si le visiteur est connecté, ils
+  // sont aussi enregistrés dans son compte (table « favoris »).
+  const syncFavorite = async (userId: string, songId: number, adding: boolean) => {
+    const { error } = adding
+      ? await supabase.from('favoris').upsert({ user_id: userId, song_id: songId }, { onConflict: 'user_id,song_id', ignoreDuplicates: true })
+      : await supabase.from('favoris').delete().eq('user_id', userId).eq('song_id', songId)
+    if (error) console.error('favoris:', error.message)
+  }
+
   const toggleFavorite = (id: number) => {
+    const adding = !favorites.includes(id)
     setFavorites(prev => {
       const next = prev.includes(id) ? prev.filter(f => f !== id) : [...prev, id]
       localStorage.setItem('vogliucanta_favorites', JSON.stringify(next))
       return next
     })
+    if (user) {
+      syncFavorite(user.id, id, adding)
+    } else if (adding && !authLoading && !localStorage.getItem('vogliucanta_login_hint')) {
+      setShowLoginHint(true) // une seule fois : voir dismissLoginHint
+    }
+  }
+
+  const dismissLoginHint = () => {
+    localStorage.setItem('vogliucanta_login_hint', '1')
+    setShowLoginHint(false)
+  }
+
+  // À la connexion : on fusionne les favoris de l'appareil et ceux du compte.
+  useEffect(() => {
+    if (!user) return
+    let cancelled = false
+    ;(async () => {
+      const { data, error } = await supabase.from('favoris').select('song_id')
+      if (error || cancelled) return
+      const remote = (data ?? []).map(r => Number(r.song_id))
+      let local: number[] = []
+      try { local = JSON.parse(localStorage.getItem('vogliucanta_favorites') || '[]') } catch {}
+      const merged = Array.from(new Set([...remote, ...local]))
+      setFavorites(merged)
+      localStorage.setItem('vogliucanta_favorites', JSON.stringify(merged))
+      const missing = merged.filter(id => !remote.includes(id))
+      if (missing.length > 0) {
+        const { error: upErr } = await supabase
+          .from('favoris')
+          .upsert(missing.map(song_id => ({ user_id: user.id, song_id })), { onConflict: 'user_id,song_id', ignoreDuplicates: true })
+        if (upErr) console.error('favoris:', upErr.message)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [user?.id])
+
+  // À la déconnexion, on vide les favoris de l'appareil : ils appartiennent au
+  // compte et se retrouveront à la prochaine connexion.
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    setFavorites([])
+    localStorage.removeItem('vogliucanta_favorites')
   }
 
   const handleSelectSong = (song: Song, playlist?: Song[], highlightQuery?: string) => {
@@ -196,6 +253,9 @@ export default function App() {
               <ProfileTab
                 isAdmin={isAdmin}
                 onOpenAdmin={() => setShowAdmin(true)}
+                user={user}
+                authLoading={authLoading}
+                onSignOut={handleSignOut}
               />
             </div>
           </div>
@@ -242,6 +302,19 @@ export default function App() {
           />
         </div>
       )}
+
+      {showLoginHint && (
+        <LoginHint
+          onLogin={() => {
+            dismissLoginHint()
+            setSelectedSong(null)
+            handleChangeTab('profile')
+          }}
+          onLater={dismissLoginHint}
+        />
+      )}
+
+      {recovery && <ResetPasswordModal onClose={clearRecovery} />}
     </>
   )
 }
