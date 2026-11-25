@@ -11,7 +11,7 @@ export default function LoginHint({ onLogin, onLater }: Props) {
   return (
     <div className="fixed left-4 right-4 bottom-24 z-[70] max-w-lg mx-auto p-4 rounded-2xl bg-surface border border-border shadow-lg">
       <p className="text-text text-sm leading-relaxed">
-        Cunnettetevi per ritruvà i vostri favuriti nantu à tutti i vostri apparechji.
+        Cunnettitivi per ritruvà i voscii favuriti nantu à tutti i voscii apparechji.
       </p>
       <div className="flex gap-2 mt-3">
         <button

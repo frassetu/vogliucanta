@@ -23,11 +23,11 @@ function messageFor(error: { message?: string; code?: string; status?: number })
   const code = error.code || ''
   const msg = (error.message || '').toLowerCase()
   if (code === 'invalid_credentials' || msg.includes('invalid login credentials')) return 'Mail o parodda sicreta falza.'
-  if (code === 'email_not_confirmed' || msg.includes('email not confirmed')) return 'Cunfirmate prima a vostra mail (verificate a vostra casella).'
+  if (code === 'email_not_confirmed' || msg.includes('email not confirmed')) return 'Cunfirmeti prima u vosciu mail (verificheti a voscia scatula).'
   if (code === 'over_email_send_rate_limit' || code === 'over_request_rate_limit' || error.status === 429 || msg.includes('rate limit'))
     return 'Troppu tentativi. Ripruveti più tardi.'
-  if (code === 'weak_password') return 'Parodda sicreta troppu debule.'
-  if (code === 'user_already_exists' || msg.includes('already registered')) return 'Un contu esiste digià cù sta mail.'
+  if (code === 'weak_password') return 'Parodda sicreta troppu debuli.'
+  if (code === 'user_already_exists' || msg.includes('already registered')) return 'Un contu esista digià cù stu mail.'
   return 'Arrori. Ripruveti più tardi.'
 }
 
@@ -53,7 +53,7 @@ export default function AuthCard({ user, loading, onSignOut }: Props) {
     const mail = email.trim()
     if (!mail) return
     if (mode === 'signup' && password.length < MIN_PASSWORD) {
-      setError(`A parodda sicreta deve avè almenu ${MIN_PASSWORD} caratteri.`)
+      setError(`A parodda sicreta devi avè almenu ${MIN_PASSWORD} caratteri.`)
       return
     }
     if (mode !== 'forgot' && !password) return
@@ -77,7 +77,7 @@ export default function AuthCard({ user, loading, onSignOut }: Props) {
         } else {
           // Message volontairement identique que l'adresse soit nouvelle ou non,
           // pour ne pas révéler qui a déjà un compte.
-          setInfo("Mail mandatu. Verificate a vostra casella (è i spam) è seguitate u ligame, poi cunnettetevi quì.")
+          setInfo("Mail mandatu. Virificheti a voscia scatula (è i spam) è seguiteti u ligami, poi cunnettitivi quì.")
           setPassword('')
           setMode('login')
         }
@@ -85,7 +85,7 @@ export default function AuthCard({ user, loading, onSignOut }: Props) {
         const { error } = await supabase.auth.resetPasswordForEmail(mail, { redirectTo: window.location.origin })
         if (error) setError(messageFor(error as any))
         else {
-          setInfo("S'ellu esiste un contu cù sta mail, un ligame vi hè statu mandatu per sceglie una nova parodda sicreta.")
+          setInfo("S'eddu esista un contu cù stu mail, un ligami vi hè statu mandatu pà sceglia una nova parodda sicreta.")
           setMode('login')
         }
       }
@@ -107,12 +107,12 @@ export default function AuthCard({ user, loading, onSignOut }: Props) {
             <UserRound className="w-5 h-5 text-accent" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="font-display font-semibold text-text">U mo contu</p>
+            <p className="font-display font-semibold text-text">U me contu</p>
             <p className="text-text-muted text-sm truncate">{user.email}</p>
           </div>
         </div>
         <p className="text-text-muted text-sm leading-relaxed mt-3">
-          I vostri favuriti sò salvati in u vostru contu.
+          I voscii favuriti sò salvati in u vosciu contu.
         </p>
         <button
           type="button"
@@ -134,9 +134,9 @@ export default function AuthCard({ user, loading, onSignOut }: Props) {
           <UserRound className="w-5 h-5 text-accent" />
         </div>
         <div className="flex-1">
-          <p className="font-display font-semibold text-text">U mo contu</p>
+          <p className="font-display font-semibold text-text">U me contu</p>
           <p className="text-text-muted text-sm leading-relaxed">
-            Ùn hè ubligatoriu. Cù un contu, i vostri favuriti si ritrovanu nantu à tutti i vostri apparechji.
+            Ùn hè ubligatoriu. Cù un contu, i voscii favuriti si ritrovani nantu à tutti i voscii apparechji.
           </p>
         </div>
       </div>
@@ -152,7 +152,7 @@ export default function AuthCard({ user, loading, onSignOut }: Props) {
                 mode === m ? 'accent-gradient text-white' : 'bg-bg border border-border text-text-muted'
               }`}
             >
-              {m === 'login' ? 'Cunnettà si' : 'Creà un contu'}
+              {m === 'login' ? 'Cunnettà si' : 'Crià un contu'}
             </button>
           ))}
         </div>
@@ -160,7 +160,7 @@ export default function AuthCard({ user, loading, onSignOut }: Props) {
 
       {mode === 'forgot' && (
         <p className="text-text-muted text-sm leading-relaxed mb-3">
-          Mittite a vostra mail : vi mandemu un ligame per sceglie una nova parodda sicreta.
+          Mittiti u vosciu mail : vi mandemi un ligami pà sceglia una nova parodda sicreta.
         </p>
       )}
 
@@ -174,7 +174,7 @@ export default function AuthCard({ user, loading, onSignOut }: Props) {
           value={email}
           onChange={e => setEmail(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && submit()}
-          placeholder="A vostra mail"
+          placeholder="U vosciu mail"
           className={inputClass}
         />
 
@@ -189,7 +189,7 @@ export default function AuthCard({ user, loading, onSignOut }: Props) {
               placeholder="Parodda sicreta"
               className="flex-1 bg-transparent text-text text-sm outline-none placeholder:text-muted"
             />
-            <button type="button" onClick={() => setShowPwd(s => !s)} aria-label="Fà vede o piattà a parodda sicreta">
+            <button type="button" onClick={() => setShowPwd(s => !s)} aria-label="Fà veda o piattà a parodda sicreta">
               {showPwd ? <EyeOff className="w-4 h-4 text-muted" /> : <Eye className="w-4 h-4 text-muted" />}
             </button>
           </div>
@@ -217,7 +217,7 @@ export default function AuthCard({ user, loading, onSignOut }: Props) {
           className="w-full py-3.5 rounded-xl accent-gradient text-white font-display font-semibold text-sm disabled:opacity-50 flex items-center justify-center gap-2"
         >
           {busy && <Loader className="w-4 h-4 animate-spin" />}
-          {mode === 'login' ? 'Cunnettà si' : mode === 'signup' ? 'Creà u contu' : 'Mandà'}
+          {mode === 'login' ? 'Cunnettà si' : mode === 'signup' ? 'Crià un contu' : 'Mandà'}
         </button>
 
         {mode === 'login' && (
