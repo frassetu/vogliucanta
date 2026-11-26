@@ -135,9 +135,6 @@ export default function AuthCard({ user, loading, onSignOut }: Props) {
         </div>
         <div className="flex-1">
           <p className="font-display font-semibold text-text">U me contu</p>
-          <p className="text-text-muted text-sm leading-relaxed">
-            Ùn hè ubligatoriu. Cù un contu, i voscii favuriti si ritrovani nantu à tutti i voscii apparechji.
-          </p>
         </div>
       </div>
 

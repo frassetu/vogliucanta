@@ -1,7 +1,7 @@
 'use client'
 
 import { useRef, useState } from 'react'
-import { ShieldCheck, Info } from 'lucide-react'
+import { ShieldCheck, Info, ChevronDown } from 'lucide-react'
 import type { User } from '@supabase/supabase-js'
 import SuggestionForm from './SuggestionForm'
 import AuthCard from './AuthCard'
@@ -21,6 +21,7 @@ const TAP_RESET_MS = 3000
 
 export default function ProfileTab({ isAdmin, onOpenAdmin, user, authLoading, onSignOut }: Props) {
   const [revealed, setRevealed] = useState(false)
+  const [aboutOpen, setAboutOpen] = useState(false)
   const tapCount = useRef(0)
   const tapTimer = useRef<NodeJS.Timeout>()
 
@@ -64,24 +65,34 @@ export default function ProfileTab({ isAdmin, onOpenAdmin, user, authLoading, on
           </button>
         )}
 
-        <div className="p-4 rounded-2xl bg-card border border-border">
-          <div className="flex items-center gap-3 mb-3">
-            <Info className="w-5 h-5 text-text-muted" />
-            <p className="font-display font-semibold text-text">À prupositu</p>
-          </div>
-          <p className="text-text-muted text-sm leading-relaxed">
-            Vogliu Cantà hè una appiicazioni di paroddi di i canzoni corsi.
-            Ogni visitori pò fighjulà è metta in favuritu i so canzoni favuriti.
-          </p>
+        <SuggestionForm />
+
+        {/* À prupositu : le texte se déplie, mais la ligne « Versioni » reste
+            toujours visible et cliquable (5 taps = accès admin). */}
+        <div className="rounded-2xl bg-card border border-border">
+          <button
+            type="button"
+            onClick={() => setAboutOpen(o => !o)}
+            aria-expanded={aboutOpen}
+            className="w-full flex items-center gap-3 p-4 text-left"
+          >
+            <Info className="w-5 h-5 text-text-muted flex-shrink-0" />
+            <p className="flex-1 font-display font-semibold text-text">À prupositu</p>
+            <ChevronDown className={`w-5 h-5 text-text-muted flex-shrink-0 transition-transform ${aboutOpen ? 'rotate-180' : ''}`} />
+          </button>
+          {aboutOpen && (
+            <p className="px-4 pb-2 text-text-muted text-sm leading-relaxed">
+              Vogliu Cantà hè una appiicazioni di paroddi di i canzoni corsi.
+              Ogni visitori pò fighjulà è metta in favuritu i so canzoni favuriti.
+            </p>
+          )}
           <p
             onClick={handleVersionTap}
-            className="text-muted text-xs mt-3 select-none"
+            className="px-4 pt-1 pb-4 text-muted text-xs select-none"
           >
             Versioni {process.env.NEXT_PUBLIC_BUILD_SHA} · {process.env.NEXT_PUBLIC_BUILD_DATE}
           </p>
         </div>
-
-        <SuggestionForm />
       </div>
     </div>
   )
