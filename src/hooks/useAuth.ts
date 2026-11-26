@@ -8,6 +8,12 @@ import { supabase } from '@/lib/supabase'
 // un lien « mot de passe oublié » arrive avec "#…&type=recovery" dans l'URL.
 const RECOVERY_IN_URL = typeof window !== 'undefined' && window.location.hash.includes('type=recovery')
 
+// Drapeau partagé : quand le visiteur réinitialise son mot de passe avec un CODE
+// saisi dans l'appli, Supabase émet quand même l'événement « PASSWORD_RECOVERY ».
+// On le met à true pendant cette opération pour ne pas ouvrir en plus la fenêtre
+// « Nova parodda sicreta » prévue pour le lien du mail.
+export const authFlags = { inAppRecovery: false }
+
 // État de connexion du visiteur (compte Supabase). Sans rapport avec l'accès
 // administrateur, qui reste un système séparé.
 export function useAuth() {
@@ -27,7 +33,7 @@ export function useAuth() {
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null)
       setLoading(false)
-      if (event === 'PASSWORD_RECOVERY') setRecovery(true)
+      if (event === 'PASSWORD_RECOVERY' && !authFlags.inAppRecovery) setRecovery(true)
     })
     return () => sub.subscription.unsubscribe()
   }, [])
