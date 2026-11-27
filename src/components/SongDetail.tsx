@@ -289,6 +289,11 @@ export default function SongDetail({ song, isFavorite, onToggleFavorite, onBack,
           <div className="flex-1" />
           {isAdmin ? (
             <>
+              <button onClick={handleShare}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-card text-text-muted text-xs font-medium">
+                <Share2 className="w-3.5 h-3.5" />
+                {shareFeedback ? 'Ligame cupiatu !' : 'Sparta'}
+              </button>
               <button onClick={() => { setModal('edit'); setSaveError('') }}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent/10 text-accent text-xs font-medium">
                 <Pencil className="w-3.5 h-3.5" />
