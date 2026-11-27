@@ -224,6 +224,11 @@ export default function App() {
   const selectedIdx = selectedSong ? songHistory.findIndex(s => s.id === selectedSong.id) : -1
 
   const handleChangeTab = (tab: Tab) => {
+    // Appui sur « Artisti » alors qu'on y est déjà (artiste ou album ouvert) : retour direct à la liste.
+    // Le bouton retour garde son fonctionnement habituel (un niveau à la fois).
+    if (tab === 'artists' && activeTab === 'artists' && !showAdmin) {
+      setArtistState({ view: 'list', selectedArtist: null, selectedAlbum: null })
+    }
     setShowAdmin(false)
     setActiveTab(tab)
   }
