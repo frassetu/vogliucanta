@@ -38,17 +38,20 @@ export default function HomeTab({ favorites, onSelectSong, onToggleFavorite, onG
   }
 
   return (
-    <div className="px-4 pt-2 pb-4 max-w-lg mx-auto">
-      {/* Search bar - tapping goes straight to Search with the keyboard already open */}
-      <button
-        className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-card border border-border text-text-muted text-sm mb-6 text-left"
-        onClick={onGoToSearch}
-      >
-        <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
-        Ricercà un artista, un titulu, una parola…
-      </button>
+    <div className="px-4 pb-4 max-w-lg mx-auto">
+      {/* Barre de recherche figée sous le bandeau : elle reste en place quand on fait défiler les récents.
+          Un appui ouvre directement la recherche avec le clavier. */}
+      <div className="sticky top-[60px] z-30 bg-bg -mx-4 px-4 pt-2 pb-4">
+        <button
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-card border border-border text-text-muted text-sm text-left"
+          onClick={onGoToSearch}
+        >
+          <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          Ricercà un artista, un titulu, una parola…
+        </button>
+      </div>
 
       {loading ? (
         <div className="space-y-3">

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, Fragment, type ReactNode } from 'react'
-import { ChevronLeft, Heart, Music, Flag, Share2, Pencil, Trash2, Loader } from 'lucide-react'
+import { ChevronLeft, Heart, Music, Flag, Share2, Pencil, Trash2, Loader, Check } from 'lucide-react'
 import TopBar from './TopBar'
 import { Song, trackView } from '@/lib/supabase'
 import { findHighlightRanges } from '@/lib/format'
@@ -289,20 +289,18 @@ export default function SongDetail({ song, isFavorite, onToggleFavorite, onBack,
           <div className="flex-1" />
           {isAdmin ? (
             <>
-              <button onClick={handleShare}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-card text-text-muted text-xs font-medium">
-                <Share2 className="w-3.5 h-3.5" />
-                {shareFeedback ? 'Ligame cupiatu !' : 'Sparta'}
+              {/* Administrateur : icônes seules (Sparta, Scambià, Sguassà) pour que la ligne tienne sans défiler */}
+              <button onClick={handleShare} aria-label="Sparta" title="Sparta"
+                className="w-9 h-9 flex items-center justify-center rounded-lg bg-card text-text-muted">
+                {shareFeedback ? <Check className="w-4 h-4 text-accent" /> : <Share2 className="w-4 h-4" />}
               </button>
-              <button onClick={() => { setModal('edit'); setSaveError('') }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent/10 text-accent text-xs font-medium">
-                <Pencil className="w-3.5 h-3.5" />
-                Scambià
+              <button onClick={() => { setModal('edit'); setSaveError('') }} aria-label="Scambià" title="Scambià"
+                className="w-9 h-9 flex items-center justify-center rounded-lg bg-accent/10 text-accent">
+                <Pencil className="w-4 h-4" />
               </button>
-              <button onClick={handleDelete} disabled={deleting}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 text-red-400 text-xs font-medium">
-                {deleting ? <Loader className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
-                Sguassà
+              <button onClick={handleDelete} disabled={deleting} aria-label="Sguassà" title="Sguassà"
+                className="w-9 h-9 flex items-center justify-center rounded-lg bg-red-500/10 text-red-400">
+                {deleting ? <Loader className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
               </button>
             </>
           ) : (

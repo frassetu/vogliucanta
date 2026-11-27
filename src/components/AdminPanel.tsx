@@ -26,6 +26,9 @@ interface MissingSong {
   annee: number | null
   paroles: string | null
 }
+// Alphabet corse : on exclut J, K, W, X, Y (même index que l'onglet Artisti)
+const CORSU_ALPHABET = 'ABCDEFGHILMNOPQRSTUVZ'.split('')
+
 interface MissingArtist { name: string; count: number; albums: string[] }
 interface MissingAlbum { name: string; count: number }
 
@@ -40,6 +43,7 @@ const emptyForm = { artiste: '', album: '', numero: '', titre: '', annee: '', pa
 export default function AdminPanel({ isAdmin, onLogin, onLogout, onClose }: Props) {
   const [tab, setTab] = useState<AdminTab>('missing')
   const [missingView, setMissingView] = useState<MissingView>('artists')
+  const missingLetterRefs = useRef<Record<string, HTMLDivElement | null>>({})
   const [missingSongs, setMissingSongs] = useState<MissingSong[]>([])
   const [missingArtists, setMissingArtists] = useState<MissingArtist[]>([])
   const [missingSelectedArtist, setMissingSelectedArtist] = useState<string | null>(null)
@@ -602,25 +606,61 @@ export default function AdminPanel({ isAdmin, onLogin, onLogout, onClose }: Prop
               <div className="space-y-2">{[...Array(5)].map((_, i) => <div key={i} className="h-14 rounded-xl bg-card pulse" />)}</div>
             ) : (
               <>
-                {missingView === 'artists' && (
-                  <div className="space-y-2 pb-10">
-                    <p className="text-xs text-muted mb-3">{missingArtists.length} {missingArtists.length > 1 ? 'artisti' : 'artistu'} cù paroddi mancanti</p>
-                    {missingArtists.length === 0 && (
-                      <p className="text-center text-muted py-8">Tutti i paroddi sò cumpleti 🎉</p>
-                    )}
-                    {missingArtists.map(artist => (
-                      <button key={artist.name}
-                        onClick={() => { setMissingSelectedArtist(artist.name); setMissingView('albums') }}
-                        className="w-full flex items-center gap-3 p-3 rounded-xl bg-card hover:bg-border transition-colors text-left">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-text text-sm font-medium truncate">{artist.name}</p>
-                          <p className="text-muted text-xs">{artist.count} {artist.count > 1 ? 'canzoni' : 'canzona'} senza paroddi</p>
+                {missingView === 'artists' && (() => {
+                  const grouped = missingArtists.reduce<Record<string, MissingArtist[]>>((acc, a) => {
+                    const letter = (a.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '')[0] || '#').toUpperCase()
+                    if (!acc[letter]) acc[letter] = []
+                    acc[letter].push(a)
+                    return acc
+                  }, {})
+                  return (
+                    <div className="relative pr-6 pb-10">
+                      <p className="text-xs text-muted mb-3">{missingArtists.length} {missingArtists.length > 1 ? 'artisti' : 'artistu'} cù paroddi mancanti</p>
+                      {missingArtists.length === 0 && (
+                        <p className="text-center text-muted py-8">Tutti i paroddi sò cumpleti 🎉</p>
+                      )}
+                      {Object.entries(grouped).sort(([a], [b]) => a.localeCompare(b)).map(([letter, group]) => (
+                        <div key={letter} ref={el => { missingLetterRefs.current[letter] = el }} style={{ scrollMarginTop: '70px' }}>
+                          <div className="text-accent font-display font-bold text-xs px-1 py-2">{letter}</div>
+                          <div className="space-y-2 mb-2">
+                            {group.map(artist => (
+                              <button key={artist.name}
+                                onClick={() => { setMissingSelectedArtist(artist.name); setMissingView('albums') }}
+                                className="w-full flex items-center gap-3 p-3 rounded-xl bg-card hover:bg-border transition-colors text-left">
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-text text-sm font-medium truncate">{artist.name}</p>
+                                  <p className="text-muted text-xs">{artist.count} {artist.count > 1 ? 'canzoni' : 'canzona'} senza paroddi</p>
+                                </div>
+                                <ChevronLeft className="w-4 h-4 text-muted rotate-180 flex-shrink-0" />
+                              </button>
+                            ))}
+                          </div>
                         </div>
-                        <ChevronLeft className="w-4 h-4 text-muted rotate-180 flex-shrink-0" />
-                      </button>
-                    ))}
-                  </div>
-                )}
+                      ))}
+
+                      {/* Index alphabétique corse — barre fixe à droite, comme dans Artisti */}
+                      {missingArtists.length > 0 && (
+                        <div className="fixed right-1 top-1/2 -translate-y-1/2 z-20 flex flex-col items-center gap-0.5">
+                          {CORSU_ALPHABET.map(letter => {
+                            const hasLetter = !!grouped[letter]
+                            return (
+                              <button
+                                key={letter}
+                                onClick={() => missingLetterRefs.current[letter]?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                                className={`text-[10px] font-bold w-5 h-4 flex items-center justify-center rounded transition-colors ${
+                                  hasLetter ? 'text-accent' : 'text-muted/30'
+                                }`}
+                                disabled={!hasLetter}
+                              >
+                                {letter}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })()}
 
                 {missingView === 'albums' && missingSelectedArtist && (() => {
                   const artistSongs = missingSongs.filter(s => s.artiste === missingSelectedArtist)
