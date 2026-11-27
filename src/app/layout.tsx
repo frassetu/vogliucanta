@@ -1,9 +1,21 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import { SITE_URL } from '@/lib/site'
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: 'Vogliu Cantà ! – Paroddi di Canzoni Corsi',
-  description: 'I paroddi di i vosci canzoni prifiriti',
+  description: 'Paroles de chansons corses (paroddi di canzoni corsi) : I Muvrini, A Filetta, Chjami Aghjalesi, Canta U Populu Corsu… Cherchez par titre, artiste ou album.',
+  alternates: { canonical: '/' },
+  openGraph: {
+    title: 'Vogliu Cantà ! – Paroddi di Canzoni Corsi',
+    description: 'Paroles de chansons corses : cherchez par titre, artiste ou album.',
+    url: '/',
+    siteName: 'Vogliu Cantà !',
+    locale: 'fr_FR',
+    type: 'website',
+    images: ['/icon-512.png'],
+  },
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
