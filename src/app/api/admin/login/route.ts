@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { ADMIN_COOKIE, ADMIN_SESSION_SECONDS, createAdminToken } from '@/lib/adminAuth'
 
 // Le secret est lu UNIQUEMENT côté serveur.
 // On accepte aussi l'ancien nom NEXT_PUBLIC_* pour rester compatible avec
@@ -15,13 +16,14 @@ export async function POST(req: NextRequest) {
   }
 
   const res = NextResponse.json({ ok: true })
-  // Cookie httpOnly : illisible par le JavaScript de la page, envoyé
-  // automatiquement à chaque requête vers /api/admin.
-  res.cookies.set('vogliucanta_admin', ADMIN_PASSWORD, {
+  // Cookie httpOnly : illisible par le JavaScript de la page. Il contient un jeton signé
+  // (jamais le mot de passe) et dure 30 jours, donc la session survit à la fermeture de l'appli.
+  res.cookies.set(ADMIN_COOKIE, createAdminToken(), {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
+    maxAge: ADMIN_SESSION_SECONDS,
   })
   return res
 }

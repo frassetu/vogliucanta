@@ -41,7 +41,8 @@ export default function ProfileTab({ isAdmin, onOpenAdmin, user, authLoading, on
   return (
     <div className="px-4 pt-4 pb-28 max-w-lg mx-auto">
       <div className="space-y-3">
-        <AuthCard user={user} loading={authLoading} onSignOut={onSignOut} />
+        {/* En administrateur, pas de compte visiteur : les favoris sont enregistrés côté serveur. */}
+        {!isAdmin && <AuthCard user={user} loading={authLoading} onSignOut={onSignOut} />}
 
         {showAdminEntry && (
           <button

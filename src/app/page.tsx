@@ -59,8 +59,15 @@ export default function App() {
   useEffect(() => {
     const saved = localStorage.getItem('vogliucanta_favorites')
     if (saved) setFavorites(JSON.parse(saved))
-    const admin = sessionStorage.getItem('vogliucanta_admin')
-    if (admin === 'true') setIsAdmin(true)
+  }, [])
+
+  // Session admin : on demande au serveur si le cookie est encore valide
+  // (elle survit à la fermeture de l'appli, contrairement à sessionStorage).
+  useEffect(() => {
+    fetch('/api/admin/session', { cache: 'no-store' })
+      .then(r => (r.ok ? r.json() : { admin: false }))
+      .then(d => setIsAdmin(!!d.admin))
+      .catch(() => {})
   }, [])
 
   // Lien partagé via « Spartà » : /?c=123 ouvre directement la chanson 123.
@@ -102,7 +109,13 @@ export default function App() {
       localStorage.setItem('vogliucanta_favorites', JSON.stringify(next))
       return next
     })
-    if (user) {
+    if (isAdmin) {
+      // Administrateur : favoris enregistrés côté serveur, sans compte visiteur.
+      fetch(adding ? '/api/admin/favorites' : `/api/admin/favorites?song_id=${id}`, {
+        method: adding ? 'POST' : 'DELETE',
+        ...(adding ? { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ song_id: id }) } : {}),
+      }).catch(() => {})
+    } else if (user) {
       syncFavorite(user.id, id, adding)
     } else if (adding && !authLoading && !localStorage.getItem('vogliucanta_login_hint')) {
       setShowLoginHint(true) // une seule fois : voir dismissLoginHint
@@ -116,7 +129,7 @@ export default function App() {
 
   // À la connexion : on fusionne les favoris de l'appareil et ceux du compte.
   useEffect(() => {
-    if (!user) return
+    if (!user || isAdmin) return
     let cancelled = false
     ;(async () => {
       const { data, error } = await supabase.from('favoris').select('song_id')
@@ -136,7 +149,35 @@ export default function App() {
       }
     })()
     return () => { cancelled = true }
-  }, [user?.id])
+  }, [user?.id, isAdmin])
+
+  // Administrateur : à la connexion (ou au retour dans l'appli), on fusionne les favoris
+  // de l'appareil et ceux du serveur.
+  useEffect(() => {
+    if (!isAdmin) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        const r = await fetch('/api/admin/favorites', { cache: 'no-store' })
+        if (!r.ok || cancelled) return
+        const remote: number[] = await r.json()
+        let local: number[] = []
+        try { local = JSON.parse(localStorage.getItem('vogliucanta_favorites') || '[]') } catch {}
+        const merged = Array.from(new Set([...remote, ...local]))
+        setFavorites(merged)
+        localStorage.setItem('vogliucanta_favorites', JSON.stringify(merged))
+        const missing = merged.filter(id => !remote.includes(id))
+        if (missing.length > 0) {
+          await fetch('/api/admin/favorites', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ song_ids: missing }),
+          })
+        }
+      } catch {}
+    })()
+    return () => { cancelled = true }
+  }, [isAdmin])
 
   // À la déconnexion, on vide les favoris de l'appareil : ils appartiennent au
   // compte et se retrouveront à la prochaine connexion.
@@ -268,11 +309,12 @@ export default function App() {
           isAdmin={isAdmin}
           onLogin={() => {
             setIsAdmin(true)
-            sessionStorage.setItem('vogliucanta_admin', 'true')
           }}
           onLogout={() => {
             setIsAdmin(false)
-            sessionStorage.removeItem('vogliucanta_admin')
+            // Comme pour un visiteur : les favoris appartiennent à l'admin, on les retire de l'appareil.
+            setFavorites([])
+            localStorage.removeItem('vogliucanta_favorites')
           }}
         />
       </div>
