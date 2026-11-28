@@ -7,6 +7,7 @@ import { getAllSongs } from '@/lib/songs'
 import { getColor, getInitials, normalize } from '@/lib/format'
 import SongCard from './SongCard'
 import { SearchState } from '@/app/page'
+import { useSongsVersion } from '@/hooks/useSongsVersion'
 
 interface Props {
   favorites: number[]
@@ -38,10 +39,11 @@ export default function SearchTab({ favorites, onSelectSong, onToggleFavorite, s
     if (active) inputRef.current?.focus()
   }, [active])
 
+  const songsVersion = useSongsVersion()
+
   useEffect(() => {
     let cancelled = false
     const load = async () => {
-      setLoading(true)
       const all = await getAllSongs()
       if (cancelled) return
       setAllSongs(all.map(s => ({
@@ -55,7 +57,7 @@ export default function SearchTab({ favorites, onSelectSong, onToggleFavorite, s
     }
     load()
     return () => { cancelled = true }
-  }, [])
+  }, [songsVersion])
 
   const nq = normalize(query)
 

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { supabase, Song } from '@/lib/supabase'
 import SongCard from './SongCard'
+import { useSongsVersion } from '@/hooks/useSongsVersion'
 
 interface Props {
   favorites: number[]
@@ -14,10 +15,11 @@ interface Props {
 export default function HomeTab({ favorites, onSelectSong, onToggleFavorite, onGoToSearch }: Props) {
   const [recent, setRecent] = useState<Song[]>([])
   const [loading, setLoading] = useState(true)
+  const songsVersion = useSongsVersion()
 
   useEffect(() => {
     const load = async () => {
-      setLoading(true)
+      // Premier chargement seulement : les rechargements suivants se font en silence.
       const { data: recData } = await supabase
         .from('chansons')
         .select('*')
@@ -30,7 +32,7 @@ export default function HomeTab({ favorites, onSelectSong, onToggleFavorite, onG
       setLoading(false)
     }
     load()
-  }, [])
+  }, [songsVersion])
 
   const formatDate = (iso: string | null | undefined) => {
     if (!iso) return ''

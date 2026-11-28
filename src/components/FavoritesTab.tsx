@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { supabase, Song } from '@/lib/supabase'
 import { getAllSongs } from '@/lib/songs'
+import { useSongsVersion } from '@/hooks/useSongsVersion'
 import SongCard from './SongCard'
 
 interface Props {
@@ -14,6 +15,7 @@ interface Props {
 export default function FavoritesTab({ favorites, onSelectSong, onToggleFavorite }: Props) {
   const [songs, setSongs] = useState<Song[]>([])
   const [loading, setLoading] = useState(true)
+  const songsVersion = useSongsVersion()
 
   useEffect(() => {
     if (favorites.length === 0) {
@@ -22,7 +24,6 @@ export default function FavoritesTab({ favorites, onSelectSong, onToggleFavorite
       return
     }
     const load = async () => {
-      setLoading(true)
       const { data } = await supabase
         .from('chansons')
         .select('*')
@@ -32,7 +33,7 @@ export default function FavoritesTab({ favorites, onSelectSong, onToggleFavorite
       setLoading(false)
     }
     load()
-  }, [favorites])
+  }, [favorites, songsVersion])
 
   // Précédent/Suivant doit naviguer entre les chansons du même album (pas
   // seulement les favoris), on utilise donc le catalogue complet en cache.

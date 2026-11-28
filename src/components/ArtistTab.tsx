@@ -8,6 +8,7 @@ import { getColor, getInitials } from '@/lib/format'
 import { useEdgeSwipeBack } from '@/hooks/useEdgeSwipeBack'
 import SongCard from './SongCard'
 import { ArtistState } from '@/app/page'
+import { useSongsVersion } from '@/hooks/useSongsVersion'
 
 interface Props {
   favorites: number[]
@@ -30,6 +31,7 @@ export default function ArtistTab({ favorites, onSelectSong, onToggleFavorite, a
   const [artists, setArtists] = useState<ArtistInfo[]>([])
   const [allSongs, setAllSongs] = useState<Song[]>([])
   const [loading, setLoading] = useState(true)
+  const songsVersion = useSongsVersion()
   const listRef = useRef<HTMLDivElement>(null)
   const letterRefs = useRef<Record<string, HTMLDivElement | null>>({})
 
@@ -37,7 +39,7 @@ export default function ArtistTab({ favorites, onSelectSong, onToggleFavorite, a
 
   useEffect(() => {
     const load = async () => {
-      setLoading(true)
+      // Pas de squelette au rechargement (loading reste false) : ça ne déplace pas la page.
       const allData = await getAllSongs()
       setAllSongs(allData)
       const map = new Map<string, { count: number; albums: Set<string> }>()
@@ -57,7 +59,7 @@ export default function ArtistTab({ favorites, onSelectSong, onToggleFavorite, a
       setLoading(false)
     }
     load()
-  }, [])
+  }, [songsVersion])
 
   // Position de défilement de la liste des artistes, mémorisée quand on
   // ouvre un artiste puis restaurée au retour (sinon la liste se recréait
